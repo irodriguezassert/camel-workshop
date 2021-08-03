@@ -7,7 +7,6 @@ import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 @Entity
-
 public class DrugStore {
 
     @Id
