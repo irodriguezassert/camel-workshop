@@ -24,7 +24,7 @@ public class TransformationRoute extends RouteBuilder {
     private String pdfDirectory;
 
     @Override
-    public void configure() throws Exception {
+    public void configure() {
 
         onException(HttpOperationFailedException.class).handled(true)
                 .log(LoggingLevel.ERROR, "error consuming the FDA API: ${exception.message}")
@@ -60,7 +60,8 @@ public class TransformationRoute extends RouteBuilder {
         from("direct:disableDrug").routeId("disableDrugRoute")
                 .log("disabling drug ${headers.ncdCode}")
                 //TODO: Update the drug with INACTIVE status
-                .to("jpa:com.assertsl.workshop.domain.DrugStore")
+                .setHeader("CamelJpaParameters", method("transformationBean", "getDrugParameters"))
+                .to("jpa:com.assertsl.workshop.domain.DrugStore?useExecuteUpdate=true&query=" + databaseProperties.getDisableDrug())
                 .end();
 
 
@@ -75,6 +76,8 @@ public class TransformationRoute extends RouteBuilder {
                 .log("Getting required fields")
                 .setHeader("packageDescription", jsonpath("$.results[0].packaging[0].description"))
                 //TODO: get genericName and labelerName fields
+                .setHeader("genericName", jsonpath("$.results[0].generic_name"))
+                .setHeader("labelerName", jsonpath("$.results[0].labeler_name"))
                 .log("Info obtained packageDescription: ${headers.packageDescription}, labelerName: ${headers.labelerName}, genericName: ${headers.genericName}")
                 .end();
 
